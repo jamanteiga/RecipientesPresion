@@ -1,0 +1,844 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>Categorización PED</title></head><body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#f4f3ee;
+  --paper:#ffffff;
+  --ink:#1c2530;
+  --ink-soft:#5b6472;
+  --line:#d8d6cd;
+  --line-soft:#e8e6de;
+  --accent:#2f5f78;
+  --accent-soft:#e3edf1;
+  --accent-ink:#1d4054;
+  --code-bg:#eef1e9;
+
+  --sep:#8a9199;
+  --cat1:#4c8c63;
+  --cat2:#c99a2e;
+  --cat3:#d97f3d;
+  --cat4:#c1493f;
+
+  --grid:#00000014;
+  --axis:#00000055;
+
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171b20;
+    --paper:#1f242b;
+    --ink:#e8e9ea;
+    --ink-soft:#a3aab3;
+    --line:#333a42;
+    --line-soft:#2a3038;
+    --accent:#6fa7c2;
+    --accent-soft:#22323a;
+    --accent-ink:#9cc9de;
+    --code-bg:#232922;
+    --grid:#ffffff14;
+    --axis:#ffffff55;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171b20;
+  --paper:#1f242b;
+  --ink:#e8e9ea;
+  --ink-soft:#a3aab3;
+  --line:#333a42;
+  --line-soft:#2a3038;
+  --accent:#6fa7c2;
+  --accent-soft:#22323a;
+  --accent-ink:#9cc9de;
+  --code-bg:#232922;
+  --grid:#ffffff14;
+  --axis:#ffffff55;
+  color-scheme: dark;
+}
+
+*{box-sizing:border-box;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'IBM Plex Sans', system-ui, sans-serif;
+  padding-inline:20px;
+  padding-block:24px 60px;
+}
+.wrap{max-width:980px; margin:0 auto;}
+h1,h2,h3{font-weight:600; text-wrap:balance; margin:0;}
+.mono{font-family:'IBM Plex Mono', ui-monospace, monospace;}
+
+header.page{display:flex; flex-direction:column; gap:6px; margin-bottom:22px;}
+.eyebrow{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--accent-ink); font-weight:600;
+}
+h1{font-size:26px; letter-spacing:-.01em;}
+.sub{color:var(--ink-soft); font-size:14.5px; max-width:62ch; line-height:1.5;}
+
+.card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+}
+
+/* ---- calculator ---- */
+.calc{padding:20px 22px; margin-bottom:18px;}
+.calc-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  align-items:end;
+}
+@media (max-width:640px){ .calc-grid{grid-template-columns:1fr;} }
+.field label{
+  display:block; font-size:12px; font-weight:600; color:var(--ink-soft);
+  text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px;
+}
+.field input, .field select{
+  width:100%; font:inherit; font-size:15px;
+  padding:9px 10px; border-radius:7px;
+  border:1px solid var(--line); background:var(--bg); color:var(--ink);
+}
+.field input:focus, .field select:focus{outline:2px solid var(--accent); outline-offset:1px;}
+.unit{font-size:12.5px; color:var(--ink-soft); margin-top:4px;}
+button.go{
+  grid-column:1/-1;
+  background:var(--accent); color:#fff; border:none;
+  font:inherit; font-weight:600; font-size:14.5px;
+  padding:11px 16px; border-radius:7px; cursor:pointer;
+  margin-top:4px;
+}
+button.go:hover{filter:brightness(1.07);}
+button.go:active{filter:brightness(0.95);}
+
+.result{
+  margin-top:16px; padding-top:16px; border-top:1px solid var(--line-soft);
+  display:none;
+}
+.result.show{display:block;}
+.result-top{display:flex; flex-wrap:wrap; gap:10px 22px; align-items:baseline; margin-bottom:10px;}
+.badge{
+  display:inline-flex; align-items:center; gap:7px;
+  font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:14px;
+  padding:5px 12px; border-radius:999px; color:#fff;
+}
+.badge .dot{width:8px;height:8px;border-radius:50%;background:currentColor;}
+.result-line{font-size:14px; color:var(--ink-soft);}
+.result-line b{color:var(--ink); font-weight:600;}
+.result-note{font-size:13px; color:var(--ink-soft); margin-top:8px; line-height:1.5;}
+.result-note.warn{color:var(--cat3);}
+.gotab{
+  margin-top:12px; display:inline-flex; align-items:center; gap:6px;
+  font-size:13.5px; font-weight:600; color:var(--accent-ink);
+  background:var(--accent-soft); border:1px solid var(--line);
+  padding:8px 13px; border-radius:7px; cursor:pointer;
+}
+.gotab:hover{filter:brightness(1.05);}
+
+/* ---- tabs ---- */
+.tabbar{
+  display:flex; gap:4px; overflow-x:auto; padding-bottom:2px;
+  margin-bottom:14px; border-bottom:1px solid var(--line);
+}
+.tabbar::-webkit-scrollbar{height:4px;}
+.tab{
+  flex:0 0 auto; font:inherit; font-size:13.5px; font-weight:500;
+  background:none; border:none; color:var(--ink-soft);
+  padding:9px 13px; cursor:pointer; white-space:nowrap;
+  border-bottom:2px solid transparent; margin-bottom:-1px;
+}
+.tab.active{color:var(--accent-ink); border-bottom-color:var(--accent); font-weight:600;}
+.tab:hover{color:var(--ink);}
+
+.panel{display:none;}
+.panel.active{display:block;}
+
+.diagram-head{display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:4px;}
+.diagram-title{font-size:16px; font-weight:600;}
+.diagram-ref{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft);}
+.diagram-desc{font-size:13.5px; color:var(--ink-soft); line-height:1.5; margin-bottom:14px; max-width:70ch;}
+
+.charthost{
+  position:relative; border:1px solid var(--line); border-radius:8px;
+  background:var(--paper); overflow:hidden;
+  aspect-ratio:4/2.7; width:100%; touch-action:none; cursor:grab;
+}
+.charthost.grabbing{cursor:grabbing;}
+.charthost canvas{position:absolute; inset:0; width:100%; height:100%; display:block;}
+.charthost .tooltip{
+  position:absolute; pointer-events:none; z-index:3;
+  background:var(--ink); color:var(--bg);
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.5;
+  padding:6px 9px; border-radius:6px; white-space:nowrap;
+  opacity:0; transform:translate(-50%,-120%); transition:opacity .08s;
+  box-shadow:0 4px 14px #0004;
+}
+.charthost .tooltip.show{opacity:1;}
+.charthost .resetzoom{
+  position:absolute; top:8px; right:8px; z-index:3;
+  font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600;
+  background:var(--paper); color:var(--ink-soft); border:1px solid var(--line);
+  border-radius:6px; padding:5px 9px; cursor:pointer; opacity:.88;
+}
+.charthost .resetzoom:hover{opacity:1; color:var(--ink);}
+.zoomhint{font-size:11.5px; color:var(--ink-soft); margin-top:6px;}
+
+.legend{display:flex; gap:14px; flex-wrap:wrap; margin-top:12px; font-size:12.5px; color:var(--ink-soft);}
+.legend span{display:inline-flex; align-items:center; gap:6px;}
+.legend i{width:9px;height:9px;border-radius:50%; display:inline-block;}
+
+.noninteractive{
+  font-size:13px; color:var(--ink-soft); background:var(--accent-soft);
+  border:1px solid var(--line); border-radius:7px; padding:10px 13px; margin-bottom:14px;
+}
+
+details.ref{margin-top:26px;}
+details.ref summary{cursor:pointer; font-size:13.5px; font-weight:600; color:var(--accent-ink); padding:6px 0;}
+table.fluids{width:100%; border-collapse:collapse; margin-top:10px; font-size:13px;}
+table.fluids th, table.fluids td{ text-align:left; padding:7px 10px; border-bottom:1px solid var(--line-soft); }
+table.fluids th{color:var(--ink-soft); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em;}
+table.fluids td.num{font-family:'IBM Plex Mono',monospace;}
+
+footer.note{margin-top:26px; font-size:12.5px; color:var(--ink-soft); line-height:1.6; max-width:72ch;}
+footer.note a{color:var(--accent-ink);}
+</style>
+
+<div class="wrap">
+
+  <header class="page">
+    <span class="eyebrow">Directiva 2014/68/UE &middot; Anexo II</span>
+    <h1>Categorización de equipos a presión</h1>
+    <p class="sub">Calculadora del cuadro de evaluación de la conformidad aplicable a un recipiente, a partir de la PS, el volumen y el fluido contenido — y los nueve cuadros del Anexo&nbsp;II, redibujados como gráficos vectoriales interactivos (no imágenes) a partir de las fórmulas de las líneas de demarcación.</p>
+  </header>
+
+  <div class="card calc">
+    <div class="calc-grid">
+      <div class="field">
+        <label for="inPS">Presión máxima admisible, PS</label>
+        <input id="inPS" type="number" inputmode="decimal" step="any" min="0" placeholder="p. ej. 12" value="25">
+        <div class="unit">bar</div>
+      </div>
+      <div class="field">
+        <label for="inV">Volumen, V</label>
+        <input id="inV" type="number" inputmode="decimal" step="any" min="0" placeholder="p. ej. 250" value="500">
+        <div class="unit">litros</div>
+      </div>
+      <div class="field">
+        <label for="inFluid">Fluido</label>
+        <select id="inFluid"></select>
+        <div class="unit">&nbsp;</div>
+      </div>
+      <button class="go" id="btnCalc">Calcular categoría</button>
+    </div>
+
+    <div class="result" id="result">
+      <div class="result-top">
+        <span class="badge" id="badgeCat"><span class="dot"></span><span id="badgeCatText">—</span></span>
+        <span class="result-line" id="lineCuadro"></span>
+      </div>
+      <div class="result-line" id="lineDetail"></div>
+      <div class="result-note" id="lineNote"></div>
+      <button class="gotab" id="btnGoTab">Ver en el gráfico del Anexo&nbsp;II →</button>
+    </div>
+  </div>
+
+  <div class="tabbar" id="tabbar"></div>
+  <div id="panels"></div>
+
+  <details class="ref">
+    <summary>Clasificación de fluidos utilizada (grupo y naturaleza) — verificar caso a caso</summary>
+    <p class="diagram-desc" style="margin-top:8px;">
+      El artículo&nbsp;13 divide los fluidos en <b style="color:var(--ink)">grupo&nbsp;1</b> (peligrosos: explosivos, inflamables, tóxicos, comburentes…) y <b style="color:var(--ink)">grupo&nbsp;2</b> (el resto). El artículo&nbsp;4(1)(a) distingue además entre fluidos de tipo <b style="color:var(--ink)">"gas"</b> (presión de vapor a la TS máxima &gt; 0,5&nbsp;bar sobre la atmosférica) y de tipo <b style="color:var(--ink)">"líquido"</b> (≤ 0,5&nbsp;bar). La tabla siguiente es la asignación por defecto usada por esta calculadora, orientativa para condiciones de servicio típicas — un líquido inflamable de categoría&nbsp;3 (p.&nbsp;ej. gasóleo, queroseno) pasa a grupo&nbsp;1 si la TS máxima admisible supera su punto de inflamación. Verifique siempre contra la FDS del fluido y las condiciones reales de diseño.
+    </p>
+    <table class="fluids" id="fluidTable"></table>
+  </details>
+
+  <footer class="note">
+    Fuente: Directiva 2014/68/UE del Parlamento Europeo y del Consejo, de 15 de mayo de 2014 (DOUE&nbsp;L&nbsp;189, 27.6.2014), artículos&nbsp;4 y&nbsp;13, y Anexo&nbsp;II (cuadros&nbsp;1–9). Los nueve gráficos son un redibujado vectorial (Canvas/JavaScript) a partir de las fórmulas de las líneas de demarcación y los umbrales exactos indicados en cada cuadro original — no son una imagen escaneada. La categoría mostrada es una determinación automática; para equipos accesorios, conjuntos, excepciones (gases inestables, ollas a presión, extintores, tuberías &gt;350&nbsp;°C, etc.) y casos límite, contraste siempre con el texto íntegro de la Directiva. Los cuadros 5–9 (equipos con llama y tuberías) se reconstruyeron a partir de los valores rotulados en cada diagrama; verifique la topología exacta de las regiones frente al texto oficial antes de un uso normativo.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+
+/* ---------------------------------------------------------------
+   Fluid data: {id,name,group(1|2),nature('gas'|'liquido'),note}
+--------------------------------------------------------------- */
+const FLUIDS = [
+ {id:'aceite_ligero', name:'Aceite ligero', group:2, nature:'liquido', note:'Se asume punto de inflamación por encima de la TS de servicio (grupo 2). Verifíquese si se trata de un destilado ligero muy inflamable.'},
+ {id:'aceite_pesado', name:'Aceite pesado / fuel-oil', group:2, nature:'liquido', note:'Punto de inflamación típicamente alto (&gt;60&nbsp;°C).'},
+ {id:'agua', name:'Agua', group:2, nature:'liquido', note:''},
+ {id:'aire_comprimido', name:'Aire comprimido', group:2, nature:'gas', note:''},
+ {id:'avgas', name:'AVGAS (gasolina de aviación)', group:1, nature:'liquido', note:'Líquido muy inflamable (punto de inflamación muy bajo).'},
+ {id:'butano', name:'Butano', group:1, nature:'gas', note:'Gas licuado extremadamente inflamable.'},
+ {id:'co2', name:'CO₂', group:2, nature:'gas', note:'No inflamable, no clasificado como peligroso a estos efectos.'},
+ {id:'diesel', name:'Diésel', group:2, nature:'liquido', note:'Se asume TS de servicio por debajo del punto de inflamación (≈55–96&nbsp;°C).'},
+ {id:'gas', name:'Gas natural / genérico', group:1, nature:'gas', note:'Gas inflamable.'},
+ {id:'gasoleo', name:'Gasóleo', group:2, nature:'liquido', note:'Equivalente a diésel; misma salvedad de TS vs. punto de inflamación.'},
+ {id:'gasolina', name:'Gasolina', group:1, nature:'liquido', note:'Líquido muy inflamable.'},
+ {id:'jetfuel', name:'Jet Fuel (queroseno de aviación)', group:2, nature:'liquido', note:'Tipo queroseno (Flam. Líq. cat. 3); se asume TS bajo el punto de inflamación.'},
+ {id:'propano', name:'Propano', group:1, nature:'gas', note:'Gas licuado extremadamente inflamable.'},
+ {id:'queroseno', name:'Queroseno', group:2, nature:'liquido', note:'Flam. Líq. cat. 3; se asume TS bajo el punto de inflamación.'},
+];
+FLUIDS.sort((a,b)=>a.name.localeCompare(b.name,'es'));
+
+/* ---------------------------------------------------------------
+   Category colors
+--------------------------------------------------------------- */
+const CAT_COLOR = {SEP:'var(--sep)', I:'var(--cat1)', II:'var(--cat2)', III:'var(--cat3)', IV:'var(--cat4)'};
+const CAT_COLOR_HEX = {SEP:'#8a9199', I:'#4c8c63', II:'#c99a2e', III:'#d97f3d', IV:'#c1493f'};
+const CAT_LABEL = {SEP:'Fuera de categoría (art. 4.3)', I:'Categoría I', II:'Categoría II', III:'Categoría III', IV:'Categoría IV'};
+
+/* ---------------------------------------------------------------
+   Category formulas — cada una es una lectura directa de las
+   líneas de demarcación del Anexo II (umbrales exactos rotulados
+   en cada cuadro). Cuadros 1-4: recipientes (PS,V), verificadas
+   punto a punto contra el diagrama original. Cuadro 5: equipos con
+   llama (PS,V). Cuadros 6-9: tuberías (PS,DN); null = fuera del
+   ámbito / no clasificado en el propio cuadro.
+--------------------------------------------------------------- */
+function cuadro1(PS,V){ // grupo 1, gas
+  if(V<=1){ if(PS<=200) return 'SEP'; if(PS<=1000) return 'III'; return 'IV'; }
+  const PSV=PS*V;
+  if(PSV<=25) return 'SEP';
+  if(PSV<=50) return 'I';
+  if(PSV<=200) return 'II';
+  if(PSV<=1000) return 'III';
+  return 'IV';
+}
+function cuadro2(PS,V){ // grupo 2, gas
+  if(V<=1){ if(PS<=1000) return 'SEP'; if(PS<=3000) return 'III'; return 'IV'; }
+  const PSV=PS*V;
+  if(PSV<=50) return 'SEP';
+  if(PSV<=200) return 'I';
+  if(PSV<=1000) return 'II';
+  const cap = V<=750 ? 3000/V : 4;
+  return PS<=cap ? 'III' : 'IV';
+}
+function cuadro3(PS,V){ // grupo 1, liquido
+  if(V<=1) return PS<=500 ? 'SEP' : 'II';
+  const PSV=PS*V;
+  if(PSV<=200) return 'SEP';
+  if(PS<=10) return 'I';
+  if(PS<=500) return 'II';
+  return 'III';
+}
+function cuadro4(PS,V){ // grupo 2, liquido
+  let sepLimit;
+  if(V<=10) sepLimit=1000;
+  else if(V<=1000) sepLimit=10000/V;
+  else sepLimit=10;
+  if(PS<=sepLimit) return 'SEP';
+  if(V<=10) return 'I';
+  return PS<=500 ? 'I' : 'II';
+}
+function cuadro5(PS,V){ // equipos con llama / aporte de calor, art.4(1)(b)
+  if(V<2 || PS<=0.5) return null;
+  if(V>1000) return 'IV';
+  const cap = Math.min(32, 3000/V);
+  if(PS>cap) return 'IV';
+  const PSV=PS*V;
+  if(PSV<=50) return 'I';
+  if(PSV<=200) return 'II';
+  return 'III';
+}
+function cuadro6(PS,DN){ // tuberías, gas, grupo1
+  if(DN<25 || PS<=0.5) return null;
+  if(DN<100) return PS>1000/DN ? 'II' : null;
+  if(DN<350) return PS>3500/DN ? 'III' : 'I';
+  return 'III';
+}
+function cuadro7(PS,DN){ // tuberías, gas, grupo2
+  if(DN<32 || PS<=0.5) return null;
+  if(DN<100) return PS>1000/DN ? 'I' : null;
+  if(DN<250) return PS>3500/DN ? 'II' : null;
+  return PS>5000/DN ? 'III' : null;
+}
+function cuadro8(PS,DN){ // tuberías, liquido, grupo1
+  if(DN<25 || PS<=0.5) return null;
+  const lower = DN<200 ? 2000/DN : 10;
+  if(PS>500) return 'III';
+  if(PS>lower) return 'II';
+  return 'I';
+}
+function cuadro9(PS,DN){ // tuberías, liquido, grupo2
+  if(DN<200 || PS<=0.5) return null;
+  const lower = DN<500 ? 5000/DN : 10;
+  return PS>lower ? 'II' : 'I';
+}
+const CUADRO_FN = {1:cuadro1, 2:cuadro2, 3:cuadro3, 4:cuadro4, 5:cuadro5, 6:cuadro6, 7:cuadro7, 8:cuadro8, 9:cuadro9};
+
+function cuadroFor(group,nature){
+  if(nature==='gas') return group===1?1:2;
+  return group===1?3:4;
+}
+
+/* ---------------------------------------------------------------
+   Chart definitions: eje X (V o DN) y eje Y (PS), ambos log-log,
+   igual que en el original. interactive=true → el punto calculado
+   por la calculadora puede situarse aquí (cuadros 1-4).
+--------------------------------------------------------------- */
+const CUADRO_DEF = {
+  1:{xLabel:'V (L)', xKey:'V', xDomain:[0.1,10000], yDomain:[0.5,10000], interactive:true},
+  2:{xLabel:'V (L)', xKey:'V', xDomain:[0.1,10000], yDomain:[0.5,10000], interactive:true},
+  3:{xLabel:'V (L)', xKey:'V', xDomain:[0.1,10000], yDomain:[0.5,10000], interactive:true},
+  4:{xLabel:'V (L)', xKey:'V', xDomain:[0.1,10000], yDomain:[0.5,10000], interactive:true},
+  5:{xLabel:'V (L)', xKey:'V', xDomain:[0.1,10000], yDomain:[0.5,10000], interactive:false},
+  6:{xLabel:'DN', xKey:'DN', xDomain:[0.1,10000], yDomain:[0.5,10000], interactive:false},
+  7:{xLabel:'DN', xKey:'DN', xDomain:[0.1,10000], yDomain:[0.5,10000], interactive:false},
+  8:{xLabel:'DN', xKey:'DN', xDomain:[0.1,10000], yDomain:[0.5,10000], interactive:false},
+  9:{xLabel:'DN', xKey:'DN', xDomain:[0.1,10000], yDomain:[0.5,10000], interactive:false},
+};
+
+const CUADRO_INFO = {
+  1:{title:'Cuadro 1 — Recipientes, gas, grupo 1', ref:'Art. 4(1)(a)(i), primer guion', desc:'Recipientes para gases, gases licuados, gases disueltos a presión, vapores y líquidos cuya presión de vapor a la TS máxima admisible supere en más de 0,5 bar la presión atmosférica — fluidos del grupo 1.', interactive:true},
+  2:{title:'Cuadro 2 — Recipientes, gas, grupo 2', ref:'Art. 4(1)(a)(i), segundo guion', desc:'Mismo tipo de recipientes que el Cuadro 1, para fluidos del grupo 2. Excepción: los recipientes para gases inestables que resultarían de categoría I o II se clasifican en categoría III; extintores portátiles y botellas de aparatos respiratorios: mínimo categoría III.', interactive:true},
+  3:{title:'Cuadro 3 — Recipientes, líquido, grupo 1', ref:'Art. 4(1)(a)(ii), primer guion', desc:'Recipientes para líquidos cuya presión de vapor a la TS máxima admisible sea ≤ 0,5 bar sobre la atmosférica — fluidos del grupo 1.', interactive:true},
+  4:{title:'Cuadro 4 — Recipientes, líquido, grupo 2', ref:'Art. 4(1)(a)(ii), segundo guion', desc:'Mismo tipo de recipientes que el Cuadro 3, para fluidos del grupo 2.', interactive:true},
+  5:{title:'Cuadro 5 — Equipos con llama o aporte de calor', ref:'Art. 4(1)(b)', desc:'Generadores de vapor o de agua sobrecalentada, calderas, equipos de proceso con riesgo de recalentamiento, y todas las ollas a presión (V&gt;2 L). La categoría depende de PS y V, no del grupo de fluido, por lo que la calculadora no enruta automáticamente a este cuadro — pase el ratón sobre el gráfico para leer la categoría en cualquier punto.', interactive:false},
+  6:{title:'Cuadro 6 — Tuberías, gas, grupo 1', ref:'Art. 4(1)(c)(i), primer guion', desc:'Tuberías para gases, grupo 1. La categoría depende de PS y del tamaño nominal DN, no del volumen — pase el ratón sobre el gráfico para leer la categoría en cualquier punto (PS, DN).', interactive:false},
+  7:{title:'Cuadro 7 — Tuberías, gas, grupo 2', ref:'Art. 4(1)(c)(i), segundo guion', desc:'Tuberías para gases, grupo 2. Excepción: tuberías para gases inestables de categoría I o II → categoría III. Depende de PS y DN.', interactive:false},
+  8:{title:'Cuadro 8 — Tuberías, líquido, grupo 1', ref:'Art. 4(1)(c)(ii), primer guion', desc:'Tuberías para líquidos, grupo 1. Depende de PS y DN.', interactive:false},
+  9:{title:'Cuadro 9 — Tuberías, líquido, grupo 2', ref:'Art. 4(1)(c)(ii), segundo guion', desc:'Tuberías para líquidos, grupo 2. Excepción: tuberías con fluido a TS &gt; 350 °C de categoría II → categoría III. Depende de PS y DN.', interactive:false},
+};
+
+/* ---------------------------------------------------------------
+   Build UI
+--------------------------------------------------------------- */
+const selFluid = document.getElementById('inFluid');
+FLUIDS.forEach(f=>{
+  const o=document.createElement('option');
+  o.value=f.id; o.textContent=f.name;
+  selFluid.appendChild(o);
+});
+selFluid.value='gasoleo';
+
+const tabbar = document.getElementById('tabbar');
+const panels = document.getElementById('panels');
+
+const tabDefs = [{id:'calc', label:'Calculadora'}];
+for(let i=1;i<=9;i++) tabDefs.push({id:'c'+i, label:'Cuadro '+i});
+
+tabDefs.forEach(t=>{
+  const b=document.createElement('button');
+  b.className='tab'; b.textContent=t.label; b.dataset.tab=t.id;
+  b.addEventListener('click',()=>{
+    showTab(t.id);
+    const num = t.id.replace('c','');
+    if(/^\d+$/.test(num)) requestAnimationFrame(()=>{
+      renderChart(+num);
+      if(lastCalc && +num===lastCalc.cuadroNum) drawMarker(lastCalc.cuadroNum, lastCalc.PS, lastCalc.V);
+    });
+  });
+  tabbar.appendChild(b);
+});
+
+for(let i=1;i<=9;i++){
+  const info = CUADRO_INFO[i];
+  const panel = document.createElement('div');
+  panel.className='panel'; panel.id='panel-c'+i;
+  panel.innerHTML = `
+    <div class="diagram-head">
+      <div class="diagram-title">${info.title}</div>
+      <div class="diagram-ref">${info.ref}</div>
+    </div>
+    <div class="diagram-desc">${info.desc}</div>
+    <div class="charthost" id="chart-${i}">
+      <canvas id="cv-${i}"></canvas>
+      <div class="tooltip" id="tt-${i}"></div>
+      <button class="resetzoom" id="rz-${i}" title="Restablecer zoom">⤢ Restablecer</button>
+    </div>
+    <div class="zoomhint">Arrastra para desplazar · rueda del ratón o pellizco para hacer zoom.</div>
+    <div class="legend" id="lg-${i}"></div>
+  `;
+  panels.appendChild(panel);
+}
+function showTab(id){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+id));
+}
+showTab('calc');
+
+/* ---------------------------------------------------------------
+   Reference table of fluids
+--------------------------------------------------------------- */
+const ft = document.getElementById('fluidTable');
+ft.innerHTML = '<tr><th>Fluido</th><th>Naturaleza</th><th>Grupo</th><th>Cuadro</th></tr>' +
+  FLUIDS.map(f=>`<tr><td>${f.name}</td><td class="num">${f.nature==='gas'?'gas':'líquido'}</td><td class="num">${f.group}</td><td class="num">Cuadro ${cuadroFor(f.group,f.nature)}</td></tr>`).join('');
+
+/* ---------------------------------------------------------------
+   Log-log chart engine (Canvas, sin librerías externas)
+--------------------------------------------------------------- */
+const state = {}; // per-cuadro: {domain:{x:[a,b],y:[a,b]}, marker:{PS,V}|null}
+
+function logScale(domain, range){
+  const l0=Math.log10(domain[0]), l1=Math.log10(domain[1]);
+  return {
+    toPx:(v)=> range[0] + (Math.log10(Math.max(v,1e-6))-l0)/(l1-l0) * (range[1]-range[0]),
+    toVal:(px)=> Math.pow(10, l0 + (px-range[0])/(range[1]-range[0]) * (l1-l0)),
+  };
+}
+
+function niceTicks(domain){
+  const lo=Math.floor(Math.log10(domain[0])), hi=Math.ceil(Math.log10(domain[1]));
+  const ticks=[];
+  for(let e=lo; e<=hi; e++){
+    for(const m of [1,2,5]){
+      const v = m*Math.pow(10,e);
+      if(v>=domain[0]*0.999 && v<=domain[1]*1.001) ticks.push(+v.toPrecision(6));
+    }
+  }
+  return ticks;
+}
+function fmtNum(v){
+  if(v>=1000) return v.toLocaleString('es');
+  if(v>=1) return (Math.round(v*100)/100).toString().replace('.',',');
+  return v.toString().replace('.',',');
+}
+
+function ensureState(num){
+  if(!state[num]) state[num] = { domain:{x:CUADRO_DEF[num].xDomain.slice(), y:CUADRO_DEF[num].yDomain.slice()}, marker:null };
+  return state[num];
+}
+
+function renderChart(num){
+  const def = CUADRO_DEF[num];
+  const host = document.getElementById('chart-'+num);
+  const canvas = document.getElementById('cv-'+num);
+  if(!host || !host.offsetWidth) return;
+  const st = ensureState(num);
+  const fn = CUADRO_FN[num];
+
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const W = host.clientWidth, H = host.clientHeight;
+  canvas.width = W*dpr; canvas.height = H*dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+
+  const pad = {l:52, r:14, t:14, b:36};
+  const plot = {x:pad.l, y:pad.t, w:W-pad.l-pad.r, h:H-pad.t-pad.b};
+
+  const sx = logScale(st.domain.x, [plot.x, plot.x+plot.w]);
+  const sy = logScale(st.domain.y, [plot.y+plot.h, plot.y]);
+
+  const css = getComputedStyle(document.documentElement);
+  const inkSoft = css.getPropertyValue('--ink-soft').trim() || '#5b6472';
+  const gridCol = css.getPropertyValue('--grid').trim() || '#00000014';
+  const axisCol = css.getPropertyValue('--axis').trim() || '#00000055';
+  const paperCol = css.getPropertyValue('--paper').trim() || '#fff';
+  const inkCol = css.getPropertyValue('--ink').trim() || '#1c2530';
+
+  // ---- region fill (grid sample) ----
+  const cell = 1.6; // css px per sample cell
+  const catCentroid = {};
+  for(let px=plot.x; px<plot.x+plot.w; px+=cell){
+    for(let py=plot.y; py<plot.y+plot.h; py+=cell){
+      const xv = sx.toVal(px+cell/2), yv = sy.toVal(py+cell/2);
+      const cat = fn(yv, xv);
+      if(cat){
+        ctx.fillStyle = CAT_COLOR_HEX[cat] + '2b';
+        ctx.fillRect(px,py,cell+0.6,cell+0.6);
+        const c = catCentroid[cat] || (catCentroid[cat]={sx:0,sy:0,n:0});
+        c.sx+=px; c.sy+=py; c.n++;
+      }
+    }
+  }
+
+  // ---- boundary edges (marching between adjacent cells) ----
+  ctx.strokeStyle = inkCol; ctx.globalAlpha=.55; ctx.lineWidth=1.1;
+  ctx.beginPath();
+  const cols = Math.ceil(plot.w/cell), rows = Math.ceil(plot.h/cell);
+  const grid = new Array((cols+1)*(rows+1));
+  for(let j=0;j<=rows;j++) for(let i=0;i<=cols;i++){
+    const px=plot.x+i*cell, py=plot.y+j*cell;
+    grid[j*(cols+1)+i] = fn(sy.toVal(py), sx.toVal(px));
+  }
+  for(let j=0;j<=rows;j++) for(let i=0;i<=cols;i++){
+    const here = grid[j*(cols+1)+i];
+    const right = i<cols ? grid[j*(cols+1)+i+1] : here;
+    const down = j<rows ? grid[(j+1)*(cols+1)+i] : here;
+    const px=plot.x+i*cell, py=plot.y+j*cell;
+    if(right!==here){ ctx.moveTo(px+cell,py); ctx.lineTo(px+cell,py+cell); }
+    if(down!==here){ ctx.moveTo(px,py+cell); ctx.lineTo(px+cell,py+cell); }
+  }
+  ctx.stroke();
+  ctx.globalAlpha=1;
+
+  // ---- gridlines + axes ----
+  ctx.strokeStyle = gridCol; ctx.lineWidth=1;
+  const xticks = niceTicks(st.domain.x), yticks = niceTicks(st.domain.y);
+  ctx.font = '11px IBM Plex Mono, monospace';
+  ctx.fillStyle = inkSoft;
+  xticks.forEach(v=>{
+    const px = sx.toPx(v);
+    ctx.beginPath(); ctx.moveTo(px,plot.y); ctx.lineTo(px,plot.y+plot.h); ctx.stroke();
+    const isMajor = Math.abs(Math.log10(v)-Math.round(Math.log10(v)))<1e-9;
+    if(isMajor){
+      ctx.save(); ctx.textAlign='center'; ctx.fillText(fmtNum(v), px, plot.y+plot.h+16); ctx.restore();
+    }
+  });
+  yticks.forEach(v=>{
+    const py = sy.toPx(v);
+    ctx.beginPath(); ctx.moveTo(plot.x,py); ctx.lineTo(plot.x+plot.w,py); ctx.stroke();
+    const isMajor = Math.abs(Math.log10(v)-Math.round(Math.log10(v)))<1e-9;
+    if(isMajor){
+      ctx.save(); ctx.textAlign='right'; ctx.fillText(fmtNum(v), plot.x-8, py+3); ctx.restore();
+    }
+  });
+  ctx.strokeStyle = axisCol; ctx.lineWidth=1.3;
+  ctx.strokeRect(plot.x, plot.y, plot.w, plot.h);
+
+  // axis titles
+  ctx.fillStyle = inkSoft; ctx.font='600 11.5px IBM Plex Sans, sans-serif';
+  ctx.save(); ctx.textAlign='center';
+  ctx.fillText(def.xLabel, plot.x+plot.w/2, H-6);
+  ctx.restore();
+  ctx.save(); ctx.translate(14, plot.y+plot.h/2); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
+  ctx.fillText('PS (bar)', 0, 0);
+  ctx.restore();
+
+  // ---- category number labels (circled), at fill centroid ----
+  Object.keys(catCentroid).forEach(cat=>{
+    const c = catCentroid[cat];
+    if(c.n<4) return;
+    const x=c.sx/c.n, y=c.sy/c.n;
+    ctx.beginPath(); ctx.arc(x,y,11,0,Math.PI*2);
+    ctx.fillStyle = paperCol; ctx.fill();
+    ctx.lineWidth=1.4; ctx.strokeStyle=CAT_COLOR_HEX[cat]; ctx.stroke();
+    ctx.fillStyle = CAT_COLOR_HEX[cat]; ctx.font='700 12px IBM Plex Mono, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(cat==='SEP'?'S':cat, x, y+0.5);
+    ctx.textBaseline='alphabetic';
+  });
+
+  // ---- marker (calculadora) ----
+  if(def.interactive && st.marker){
+    const {PS,V} = st.marker;
+    if(V>=st.domain.x[0] && V<=st.domain.x[1] && PS>=st.domain.y[0] && PS<=st.domain.y[1]){
+      const x=sx.toPx(V), y=sy.toPx(PS);
+      ctx.strokeStyle='rgba(200,40,40,0.6)'; ctx.lineWidth=1.2; ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(x,plot.y); ctx.lineTo(x,plot.y+plot.h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(plot.x,y); ctx.lineTo(plot.x+plot.w,y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(x,y,6.5,0,Math.PI*2);
+      ctx.fillStyle='#c8281a'; ctx.fill();
+      ctx.lineWidth=2.2; ctx.strokeStyle='#fff'; ctx.stroke();
+    }
+  }
+
+  // stash for interaction
+  st._geom = {plot, sx, sy};
+
+  // legend (once)
+  const lg = document.getElementById('lg-'+num);
+  if(lg && !lg.dataset.built){
+    const cats = Object.keys(catCentroid);
+    const order = ['SEP','I','II','III','IV'].filter(c=>cats.includes(c));
+    lg.innerHTML = order.map(c=>`<span><i style="background:${CAT_COLOR[c]}"></i>${c==='SEP'?'Fuera de categoría':'Categoría '+c}</span>`).join('');
+    lg.dataset.built='1';
+  }
+}
+
+function drawMarker(cuadroNum, PS, V){
+  const st = ensureState(cuadroNum);
+  st.marker = {PS,V};
+  renderChart(cuadroNum);
+}
+
+/* ---------------------------------------------------------------
+   Interaction: hover tooltip, drag-pan, wheel/pinch zoom
+--------------------------------------------------------------- */
+for(let i=1;i<=9;i++){
+  (function(num){
+    const host = document.getElementById('chart-'+num);
+    const canvas = document.getElementById('cv-'+num);
+    const tt = document.getElementById('tt-'+num);
+    const rz = document.getElementById('rz-'+num);
+    const def = CUADRO_DEF[num];
+    let dragging=false, lastX=0, lastY=0, moved=false;
+
+    function clientToPlot(clientX, clientY){
+      const r = host.getBoundingClientRect();
+      return {px: clientX-r.left, py: clientY-r.top};
+    }
+
+    function showTooltip(clientX, clientY){
+      const st = ensureState(num);
+      if(!st._geom) return;
+      const {px,py} = clientToPlot(clientX, clientY);
+      const {plot, sx, sy} = st._geom;
+      if(px<plot.x||px>plot.x+plot.w||py<plot.y||py>plot.y+plot.h){ tt.classList.remove('show'); return; }
+      const xv = sx.toVal(px), yv = sy.toVal(py);
+      const cat = CUADRO_FN[num](yv, xv);
+      tt.innerHTML = `${def.xKey} = ${fmtNum(xv)} · PS = ${fmtNum(yv)} bar<br>${cat ? CAT_LABEL[cat] : 'Fuera de este cuadro'}`;
+      tt.style.left = px+'px'; tt.style.top = py+'px';
+      tt.classList.add('show');
+    }
+
+    host.addEventListener('mousemove', e=>{
+      if(dragging){
+        const dx=e.clientX-lastX, dy=e.clientY-lastY;
+        if(Math.abs(dx)+Math.abs(dy)>2) moved=true;
+        lastX=e.clientX; lastY=e.clientY;
+        panBy(num, dx, dy);
+        tt.classList.remove('show');
+        return;
+      }
+      showTooltip(e.clientX, e.clientY);
+    });
+    host.addEventListener('mouseleave', ()=>{ tt.classList.remove('show'); dragging=false; host.classList.remove('grabbing'); });
+    host.addEventListener('mousedown', e=>{ dragging=true; moved=false; lastX=e.clientX; lastY=e.clientY; host.classList.add('grabbing'); });
+    window.addEventListener('mouseup', ()=>{ dragging=false; host.classList.remove('grabbing'); });
+
+    host.addEventListener('wheel', e=>{
+      e.preventDefault();
+      const {px,py} = clientToPlot(e.clientX, e.clientY);
+      zoomAt(num, px, py, e.deltaY<0 ? 0.85 : 1/0.85);
+    }, {passive:false});
+
+    // touch: single-finger pan, two-finger pinch zoom
+    let touchState=null;
+    host.addEventListener('touchstart', e=>{
+      if(e.touches.length===1){ touchState={mode:'pan', x:e.touches[0].clientX, y:e.touches[0].clientY}; }
+      else if(e.touches.length===2){
+        const [a,b]=e.touches;
+        touchState={mode:'pinch', d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),
+          cx:(a.clientX+b.clientX)/2, cy:(a.clientY+b.clientY)/2};
+      }
+    }, {passive:true});
+    host.addEventListener('touchmove', e=>{
+      if(!touchState) return;
+      e.preventDefault();
+      if(touchState.mode==='pan' && e.touches.length===1){
+        const dx=e.touches[0].clientX-touchState.x, dy=e.touches[0].clientY-touchState.y;
+        touchState.x=e.touches[0].clientX; touchState.y=e.touches[0].clientY;
+        panBy(num, dx, dy);
+      } else if(touchState.mode==='pinch' && e.touches.length===2){
+        const [a,b]=e.touches;
+        const d = Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+        const {px,py} = clientToPlot(touchState.cx, touchState.cy);
+        zoomAt(num, px, py, touchState.d/d);
+        touchState.d=d;
+      }
+    }, {passive:false});
+    host.addEventListener('touchend', ()=>{ touchState=null; });
+
+    host.addEventListener('click', ()=>{ if(moved){ moved=false; } });
+
+    rz.addEventListener('click', ()=>{
+      const st = ensureState(num);
+      st.domain = {x:def.xDomain.slice(), y:def.yDomain.slice()};
+      renderChart(num);
+    });
+  })(i);
+}
+
+function panBy(num, dxPx, dyPx){
+  const st = ensureState(num);
+  if(!st._geom) return;
+  const {plot} = st._geom;
+  const domX = st.domain.x, domY = st.domain.y;
+  const fracX = dxPx/plot.w, fracY = dyPx/plot.h;
+  const spanX = Math.log10(domX[1])-Math.log10(domX[0]);
+  const spanY = Math.log10(domY[1])-Math.log10(domY[0]);
+  const shiftX = -fracX*spanX, shiftY = fracY*spanY;
+  st.domain.x = [Math.pow(10,Math.log10(domX[0])+shiftX), Math.pow(10,Math.log10(domX[1])+shiftX)];
+  st.domain.y = [Math.pow(10,Math.log10(domY[0])+shiftY), Math.pow(10,Math.log10(domY[1])+shiftY)];
+  renderChart(num);
+}
+
+function zoomAt(num, px, py, factor){
+  const st = ensureState(num);
+  if(!st._geom) return;
+  const {plot, sx, sy} = st._geom;
+  const vx = sx.toVal(px), vy = sy.toVal(py);
+  const domX = st.domain.x, domY = st.domain.y;
+  function scaled(dom, center){
+    const l0=Math.log10(dom[0]), l1=Math.log10(dom[1]), lc=Math.log10(center);
+    const nl0 = lc-(lc-l0)*factor, nl1 = lc+(l1-lc)*factor;
+    return [Math.pow(10,nl0), Math.pow(10,nl1)];
+  }
+  st.domain.x = scaled(domX, vx);
+  st.domain.y = scaled(domY, vy);
+  renderChart(num);
+}
+
+let rerenderQueued=false;
+window.addEventListener('resize', ()=>{
+  if(rerenderQueued) return;
+  rerenderQueued=true;
+  requestAnimationFrame(()=>{ rerenderQueued=false; for(let i=1;i<=9;i++){ const p=document.getElementById('panel-c'+i); if(p && p.classList.contains('active')) renderChart(i); } });
+});
+
+/* ---------------------------------------------------------------
+   Calculate
+--------------------------------------------------------------- */
+let lastCalc = null;
+
+function calc(){
+  const PS = parseFloat(document.getElementById('inPS').value);
+  const V = parseFloat(document.getElementById('inV').value);
+  const fluid = FLUIDS.find(f=>f.id===selFluid.value);
+  const result = document.getElementById('result');
+
+  if(!isFinite(PS) || !isFinite(V) || PS<=0 || V<=0 || !fluid){
+    result.classList.remove('show');
+    return;
+  }
+
+  result.classList.add('show');
+
+  if(PS<=0.5){
+    lastCalc = null;
+    document.getElementById('badgeCat').style.background = 'var(--sep)';
+    document.getElementById('badgeCatText').textContent = 'Fuera de la Directiva';
+    document.getElementById('lineCuadro').textContent = '';
+    document.getElementById('lineDetail').textContent = `PS = ${PS} bar no supera 0,5 bar: el artículo 1 excluye este equipo del ámbito de la Directiva.`;
+    document.getElementById('lineNote').textContent = '';
+    document.getElementById('btnGoTab').style.display = 'none';
+    return;
+  }
+
+  const cuadroNum = cuadroFor(fluid.group, fluid.nature);
+  const cat = CUADRO_FN[cuadroNum](PS, V);
+  lastCalc = {cuadroNum, PS, V};
+
+  document.getElementById('badgeCat').style.background = CAT_COLOR[cat];
+  document.getElementById('badgeCatText').textContent = CAT_LABEL[cat];
+  document.getElementById('lineCuadro').innerHTML = `→ <b>Cuadro ${cuadroNum}</b> del Anexo II (${CUADRO_INFO[cuadroNum].ref})`;
+  document.getElementById('lineDetail').innerHTML =
+    `<b>${fluid.name}</b> — grupo ${fluid.group}, naturaleza ${fluid.nature==='gas'?'gas/vapor':'líquido'} &middot; PS = <span class="mono">${PS}</span> bar, V = <span class="mono">${V}</span> L, PS·V = <span class="mono">${(PS*V).toLocaleString('es')}</span> bar·L`;
+  document.getElementById('lineNote').textContent = fluid.note ? fluid.note.replace(/&nbsp;/g,' ') : '';
+  document.getElementById('lineNote').className = 'result-note';
+
+  const btn = document.getElementById('btnGoTab');
+  btn.style.display = '';
+  btn.onclick = ()=>{
+    showTab('c'+cuadroNum);
+    requestAnimationFrame(()=>{ drawMarker(cuadroNum, PS, V); });
+    document.getElementById('chart-'+cuadroNum).scrollIntoView({behavior:'smooth', block:'center'});
+  };
+
+  const st = ensureState(cuadroNum);
+  st.marker = {PS,V};
+  const activePanel = document.getElementById('panel-c'+cuadroNum);
+  if(activePanel && activePanel.classList.contains('active')) renderChart(cuadroNum);
+}
+
+document.getElementById('btnCalc').addEventListener('click', calc);
+[document.getElementById('inPS'), document.getElementById('inV')].forEach(el=>{
+  el.addEventListener('keydown', e=>{ if(e.key==='Enter') calc(); });
+});
+selFluid.addEventListener('change', calc);
+
+calc();
+
+})();
+</script>
+
+</body></html>
