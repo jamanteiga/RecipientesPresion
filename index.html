@@ -255,13 +255,9 @@ footer.note a{color:var(--accent-ink);}
         </div>
         <div class="zoomhint">Arrastra para desplazar · rueda del ratón o pellizco para hacer zoom.</div>
         <div class="legend" id="lg-calc"></div>
-        <button class="gotab" id="btnGoTab">Ver este cuadro con su descripción completa →</button>
       </div>
     </div>
   </div>
-
-  <div class="tabbar" id="tabbar"></div>
-  <div id="panels"></div>
 
   <details class="ref">
     <summary>Clasificación de fluidos utilizada (grupo y naturaleza) — verificar caso a caso</summary>
@@ -270,10 +266,6 @@ footer.note a{color:var(--accent-ink);}
     </p>
     <table class="fluids" id="fluidTable"></table>
   </details>
-
-  <footer class="note">
-    Fuente: Directiva 2014/68/UE del Parlamento Europeo y del Consejo, de 15 de mayo de 2014 (DOUE&nbsp;L&nbsp;189, 27.6.2014), artículos&nbsp;4 y&nbsp;13, y Anexo&nbsp;II (cuadros&nbsp;1–9). Los nueve gráficos se calculan y dibujan con Chart.js a partir de las fórmulas de las líneas de demarcación y los umbrales exactos indicados en cada cuadro original — no son una imagen escaneada. La categoría mostrada es una determinación automática; para equipos accesorios, conjuntos, excepciones (gases inestables, ollas a presión, extintores, tuberías &gt;350&nbsp;°C, etc.) y casos límite, contraste siempre con el texto íntegro de la Directiva. Los cuadros 5–9 (equipos con llama y tuberías) se reconstruyeron a partir de los valores rotulados en cada diagrama; verifique la topología exacta de las regiones frente al texto oficial antes de un uso normativo.
-  </footer>
 
 </div>
 
@@ -497,7 +489,7 @@ const CUADRO_INFO = {
 };
 
 /* ---------------------------------------------------------------
-   Build static UI (fluid select, tabs, panels, fluid table)
+   Build static UI (fluid select, fluid table)
 --------------------------------------------------------------- */
 const selFluid = document.getElementById('inFluid');
 FLUIDS.forEach(f=>{
@@ -506,51 +498,6 @@ FLUIDS.forEach(f=>{
   selFluid.appendChild(o);
 });
 selFluid.value='gasoleo';
-
-const tabbar = document.getElementById('tabbar');
-const panels = document.getElementById('panels');
-const tabDefs = [{id:'calc', label:'Calculadora'}];
-for(let i=1;i<=9;i++) tabDefs.push({id:'c'+i, label:'Cuadro '+i});
-
-tabDefs.forEach(t=>{
-  const b=document.createElement('button');
-  b.className='tab'; b.textContent=t.label; b.dataset.tab=t.id;
-  b.addEventListener('click',()=>{
-    showTab(t.id);
-    const num = t.id.replace('c','');
-    if(/^\d+$/.test(num)) requestAnimationFrame(()=>{
-      const chart = ensureChart(+num, 'cv-'+num, 'tt-'+num, 'lg-'+num, 'rz-'+num, 'chart-'+num);
-      if(lastCalc && +num===lastCalc.cuadroNum) setMarker(chart, lastCalc.PS, lastCalc.V);
-    });
-  });
-  tabbar.appendChild(b);
-});
-
-for(let i=1;i<=9;i++){
-  const info = CUADRO_INFO[i];
-  const panel = document.createElement('div');
-  panel.className='panel'; panel.id='panel-c'+i;
-  panel.innerHTML = `
-    <div class="diagram-head">
-      <div class="diagram-title">${info.title}</div>
-      <div class="diagram-ref">${info.ref}</div>
-    </div>
-    <div class="diagram-desc">${info.desc}</div>
-    <div class="charthost tall" id="chart-${i}">
-      <canvas id="cv-${i}"></canvas>
-      <div class="tooltip" id="tt-${i}"></div>
-      <button class="resetzoom" id="rz-${i}" title="Restablecer zoom">⤢ Restablecer</button>
-    </div>
-    <div class="zoomhint">Arrastra para desplazar · rueda del ratón o pellizco para hacer zoom.</div>
-    <div class="legend" id="lg-${i}"></div>
-  `;
-  panels.appendChild(panel);
-}
-function showTab(id){
-  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===id));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+id));
-}
-showTab('calc');
 
 const ft = document.getElementById('fluidTable');
 ft.innerHTML = '<tr><th>Fluido</th><th>Naturaleza</th><th>Grupo</th><th>Cuadro</th></tr>' +
@@ -824,15 +771,6 @@ function calc(){
   chartBlock.hidden = false;
   const chart = ensureChart(cuadroNum, 'cv-calc', 'tt-calc', 'lg-calc', 'rz-calc', 'chart-calc');
   setMarker(chart, PS, V);
-
-  document.getElementById('btnGoTab').onclick = ()=>{
-    showTab('c'+cuadroNum);
-    requestAnimationFrame(()=>{
-      const tchart = ensureChart(cuadroNum, 'cv-'+cuadroNum, 'tt-'+cuadroNum, 'lg-'+cuadroNum, 'rz-'+cuadroNum, 'chart-'+cuadroNum);
-      setMarker(tchart, PS, V);
-    });
-    document.getElementById('panel-c'+cuadroNum).scrollIntoView({behavior:'smooth', block:'start'});
-  };
 }
 
 document.getElementById('btnCalc').addEventListener('click', calc);
