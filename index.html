@@ -779,6 +779,25 @@ document.getElementById('btnCalc').addEventListener('click', calc);
 });
 selFluid.addEventListener('change', calc);
 
+/* ---------------------------------------------------------------
+   Enlace desde PIPING (u otra app): ?ps=<bar>&v=<L>&fluido=<id>
+   Si el fluido no está en la lista: &grupo=1|2&estado=gas|liquido&nombre=<texto>
+--------------------------------------------------------------- */
+(function(){
+  const q = new URLSearchParams(location.search);
+  if (!q.has('ps') && !q.has('v')) return;
+  if (q.get('ps')) document.getElementById('inPS').value = q.get('ps');
+  if (q.get('v')) document.getElementById('inV').value = q.get('v');
+  let id = q.get('fluido');
+  if (!(id && FLUIDS.some(f => f.id === id)) && q.get('grupo')) {
+    id = 'externo';
+    const f = { id, name: (q.get('nombre') || 'Fluido') + ' (desde ' + (q.get('origen') || 'enlace') + ')', group: +q.get('grupo') === 1 ? 1 : 2, nature: q.get('estado') === 'gas' ? 'gas' : 'liquido', note: 'Grupo y naturaleza indicados por la aplicación de origen.' };
+    FLUIDS.push(f);
+    const o = document.createElement('option'); o.value = id; o.textContent = f.name; selFluid.appendChild(o);
+  }
+  if (id && FLUIDS.some(f => f.id === id)) selFluid.value = id;
+})();
+
 calc();
 
 })();
